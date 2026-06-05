@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>بصيرة — المرشد الذكي</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700;900&display=swap');
+
+:root {
+  --bg: #050810;
+  --surface: #0d1117;
+  --card: #111827;
+  --accent: #38bdf8;
+  --accent2: #818cf8;
+  --green: #34d399;
+  --orange: #fb923c;
+  --red: #f87171;
+  --text: #f1f5f9;
+  --muted: #64748b;
+  --border: rgba(255,255,255,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: 'Tajawal', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100dvh;
+  overflow: hidden;
+  user-select: none;
+}
+
+.screen { display:none; width:100%; height:100dvh; flex-direction:column; }
+.screen.active { display:flex; }
+
+#welcome {
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, #1e3a5f 0%, var(--bg) 70%);
+  align-items: center;
+  justify-content: space-between;
+  padding: 60px 28px 48px;
+  text-align: center;
+}
+
+.brand { display:flex; flex-direction:column; align-items:center; gap:20px; }
+
+.eyes-container {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  animation: breathe 3s ease-in-out infinite;
+}
+
+.eye-icon {
+  width: 64px; height: 40px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.eye-shape {
+  width: 64px; height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%);
+  position: relative;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 18px rgba(56,189,248,0.25), inset 0 0 10px rgba(56,189,248,0.05);
+}
+
+.eye-pupil {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #7dd3fc, #0369a1);
+  box-shadow: 0 0 8px rgba(56,189,248,0.6);
+  position: relative;
+  animation: blink-pupil 4s ease-in-out infinite;
+}
+.eye-pupil::after {
+  content:'';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #fff;
+  position: absolute; top: 3px; left: 4px;
+}
+
+.eye-lid {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 0;
+  background: var(--bg);
+  border-radius: 50%;
+  animation: blink-lid 4s ease-in-out infinite;
+}
+
+@keyframes blink-lid {
+  0%,40%,60%,100% { height: 0; }
+  50% { height: 100%; }
+}
+@keyframes blink-pupil {
+  0%,40%,60%,100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.05); }
+}
+@keyframes breathe {
+  0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.06);opacity:0.85}
+}
+
+.brand h1 { font-size:44px; font-weight:900; letter-spacing:-1px; color:var(--text); }
+.brand h1 em { color:var(--accent); font-style:normal; }
+.brand p { color:var(--muted); font-size:15px; font-weight:300; line-height:1.7; max-width:280px; }
+
+.section-label {
+  font-size:12px; color:var(--muted); letter-spacing:1px; text-transform:uppercase;
+  margin-bottom:12px; text-align:right;
+}
+
+.langs { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; width:100%; }
+.lang-btn {
+  background:var(--card); border:1.5px solid var(--border);
+  border-radius:14px; padding:10px 4px; cursor:pointer;
+  transition:all 0.2s; color:var(--text);
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+}
+.lang-btn .flag { font-size:20px; }
+.lang-btn .lname { font-size:10px; color:var(--muted); font-family:'Tajawal',sans-serif; }
+.lang-btn.on { border-color:var(--accent); background:rgba(56,189,248,0.1); }
+.lang-btn.on .lname { color:var(--accent); }
+
+.go-btn {
+  width:100%; padding:20px;
+  background:linear-gradient(135deg, var(--accent2) 0%, var(--accent) 100%);
+  border:none; border-radius:20px;
+  color:#fff; font-family:'Tajawal',sans-serif;
+  font-size:22px; font-weight:700; cursor:pointer;
+  box-shadow:0 8px 32px rgba(56,189,248,0.3);
+  transition:all 0.2s;
+}
+.go-btn:active { transform:scale(0.97); }
+
+#app { position:relative; background:#000; }
+
+video#cam { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+canvas#cap { display:none; }
+
+.grad-top {
+  position:absolute; top:0; left:0; right:0; height:160px;
+  background:linear-gradient(to bottom, rgba(5,8,16,0.9) 0%, transparent 100%);
+  z-index:2; pointer-events:none;
+}
+.grad-bot {
+  position:absolute; bottom:0; left:0; right:0; height:280px;
+  background:linear-gradient(to top, rgba(5,8,16,0.98) 0%, transparent 100%);
+  z-index:2; pointer-events:none;
+}
+
+.topbar {
+  position:absolute; top:0; left:0; right:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:20px 18px 0;
+}
+.back-btn {
+  width:42px; height:42px; border-radius:50%;
+  background:rgba(255,255,255,0.1); backdrop-filter:blur(8px);
+  border:none; color:#fff; font-size:20px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.mode-badge {
+  background:rgba(52,211,153,0.15); backdrop-filter:blur(8px);
+  border:1px solid rgba(52,211,153,0.3);
+  border-radius:20px; padding:8px 14px;
+  font-size:12px; color:var(--green); font-weight:700;
+  display:flex; align-items:center; gap:6px;
+}
+.dot-live {
+  width:7px; height:7px; border-radius:50%; background:var(--green);
+  animation:blink 1.2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.cur-lang-badge {
+  background:rgba(56,189,248,0.1); backdrop-filter:blur(8px);
+  border:1px solid rgba(56,189,248,0.25);
+  border-radius:20px; padding:8px 14px;
+  font-size:12px; color:var(--accent); font-weight:700;
+}
+
+.speech-bubble {
+  position:absolute; bottom:260px; left:16px; right:16px; z-index:10;
+  background:rgba(13,17,23,0.88); backdrop-filter:blur(20px);
+  border:1px solid var(--border); border-radius:20px; padding:16px 18px;
+  min-height:70px; display:flex; align-items:center; gap:12px;
+  transform:translateY(8px); opacity:0;
+  transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.speech-bubble.show { opacity:1; transform:translateY(0); }
+
+.speak-icon {
+  width:36px; height:36px; border-radius:50%; flex-shrink:0;
+  background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3);
+  display:flex; align-items:center; justify-content:center; font-size:16px;
+}
+.speak-icon.talking { animation:pulse-icon 0.8s ease-in-out infinite; }
+@keyframes pulse-icon {
+  0%,100%{box-shadow:0 0 0 0 rgba(56,189,248,0.4)}
+  50%{box-shadow:0 0 0 8px rgba(56,189,248,0)}
+}
+#ai-text { font-size:15px; line-height:1.65; color:var(--text); flex:1; }
+
+.waves {
+  position:absolute; bottom:230px; left:50%; transform:translateX(-50%);
+  display:flex; gap:3px; align-items:flex-end; z-index:10;
+  opacity:0; transition:opacity 0.3s;
+}
+.waves.active { opacity:1; }
+.w { width:3px; background:var(--accent); border-radius:2px; }
+.w:nth-child(1){height:8px;  animation:wv 0.7s ease-in-out infinite 0s}
+.w:nth-child(2){height:16px; animation:wv 0.7s ease-in-out infinite 0.1s}
+.w:nth-child(3){height:24px; animation:wv 0.7s ease-in-out infinite 0.2s}
+.w:nth-child(4){height:16px; animation:wv 0.7s ease-in-out infinite 0.3s}
+.w:nth-child(5){height:8px;  animation:wv 0.7s ease-in-out infinite 0.4s}
+@keyframes wv { 0%,100%{transform:scaleY(0.3)} 50%{transform:scaleY(1)} }
+
+.bottom-panel {
+  position:absolute; bottom:0; left:0; right:0; z-index:10;
+  padding:0 18px 32px; display:flex; flex-direction:column; gap:12px;
+}
+
+.nav-bar {
+  background:rgba(17,24,39,0.9); backdrop-filter:blur(16px);
+  border:1px solid var(--border); border-radius:18px; padding:14px 16px;
+  display:flex; align-items:center; gap:10px;
+}
+.nav-bar input {
+  flex:1; background:transparent; border:none; outline:none;
+  color:var(--text); font-family:'Tajawal',sans-serif; font-size:14px; direction:rtl;
+}
+.nav-bar input::placeholder { color:var(--muted); }
+.nav-go {
+  background:var(--accent); border:none; border-radius:12px;
+  padding:10px 16px; color:#000; font-family:'Tajawal',sans-serif;
+  font-size:13px; font-weight:700; cursor:pointer;
+  white-space:nowrap; transition:all 0.2s;
+  display:flex; align-items:center; gap:5px;
+}
+.nav-go:active { transform:scale(0.95); }
+
+.controls { display:flex; align-items:center; justify-content:center; gap:20px; }
+.ctrl {
+  width:54px; height:54px; border-radius:50%;
+  background:rgba(255,255,255,0.08); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.12);
+  color:#fff; font-size:20px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all 0.2s;
+}
+.ctrl:active { transform:scale(0.9); }
+
+.main-ctrl {
+  width:72px; height:72px; border-radius:50%; font-size:26px;
+  background:linear-gradient(135deg, #1d4ed8, var(--accent));
+  border:3px solid rgba(255,255,255,0.2);
+  box-shadow:0 0 30px rgba(56,189,248,0.35); position:relative;
+}
+.main-ctrl.running {
+  background:linear-gradient(135deg, var(--red), #f97316);
+  box-shadow:0 0 30px rgba(248,113,113,0.4);
+}
+.main-ctrl.running::after {
+  content:''; position:absolute; inset:-6px; border-radius:50%;
+  border:2px solid rgba(248,113,113,0.3);
+  animation:spin 2s linear infinite;
+}
+@keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+.status-row { display:flex; gap:8px; justify-content:center; }
+.chip {
+  background:rgba(17,24,39,0.8); backdrop-filter:blur(8px);
+  border:1px solid var(--border); border-radius:20px; padding:6px 12px;
+  font-size:11px; color:var(--muted); display:flex; align-items:center; gap:5px;
+}
+.chip.ok { border-color:rgba(52,211,153,0.3); color:var(--green); }
+.chip.warn { border-color:rgba(251,146,60,0.3); color:var(--orange); }
+
+.scan-ring {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:60px; height:60px; z-index:5; pointer-events:none;
+}
+.scan-ring svg { width:60px; height:60px; }
+.scan-ring circle {
+  fill:none; stroke:var(--accent); stroke-width:2;
+  stroke-dasharray:157; stroke-dashoffset:157;
+  transform:rotate(-90deg); transform-origin:50% 50%;
+  transition:stroke-dashoffset 0.1s linear;
+}
+</style>
+</head>
+<body>
+
+<div id="welcome" class="screen active">
+  <div class="brand">
+    <div class="eyes-container">
+      <div class="eye-icon"><div class="eye-shape"><div class="eye-pupil"></div><div class="eye-lid"></div></div></div>
+      <div class="eye-icon"><div class="eye-shape"><div class="eye-pupil"></div><div class="eye-lid"></div></div></div>
+    </div>
+    <h1>بَ<em>صي</em>رة</h1>
+    <p>مرشدك الذكي المستمر — يرى العالم ويوجّهك بصوت حي بدون توقف</p>
+  </div>
+  <div style="width:100%">
+    <div class="section-label">اختر لغتك</div>
+    <div class="langs">
+      <button class="lang-btn on" onclick="pickLang(this,'ar','ar-SA','🇸🇦')">
+        <span class="flag">🇸🇦</span><span class="lname">عربية</span>
+      </button>
+      <button class="lang-btn" onclick="pickLang(this,'en','en-US','🇺🇸')">
+        <span class="flag">🇺🇸</span><span class="lname">English</span>
+      </button>
+      <button class="lang-btn" onclick="pickLang(this,'fr','fr-FR','🇫🇷')">
+        <span class="flag">🇫🇷</span><span class="lname">Français</span>
+      </button>
+      <button class="lang-btn" onclick="pickLang(this,'es','es-ES','🇪🇸')">
+        <span class="flag">🇪🇸</span><span class="lname">Español</span>
+      </button>
+      <button class="lang-btn" onclick="pickLang(this,'pt','pt-BR','🇧🇷')">
+        <span class="flag">🇧🇷</span><span class="lname">Português</span>
+      </button>
+    </div>
+  </div>
+  <button class="go-btn" onclick="launch()">ابدأ الإرشاد المستمر 🎙️</button>
+</div>
+
+<div id="app" class="screen">
+  <video id="cam" autoplay playsinline muted></video>
+  <canvas id="cap"></canvas>
+  <div class="grad-top"></div>
+  <div class="grad-bot"></div>
+  <div class="topbar">
+    <button class="back-btn" onclick="exitApp()">←</button>
+    <div class="mode-badge"><div class="dot-live"></div><span id="liveLabel">مباشر</span></div>
+    <div class="cur-lang-badge" id="langBadge">🇸🇦 AR</div>
+  </div>
+  <div class="scan-ring" id="scanRing">
+    <svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="25" id="scanCircle"/></svg>
+  </div>
+  <div class="speech-bubble" id="bubble">
+    <div class="speak-icon" id="speakIcon">🗣️</div>
+    <div id="ai-text">في انتظار التحليل...</div>
+  </div>
+  <div class="waves" id="waves">
+    <div class="w"></div><div class="w"></div><div class="w"></div>
+    <div class="w"></div><div class="w"></div>
+  </div>
+  <div class="bottom-panel">
+    <div class="nav-bar">
+      <input type="text" id="destInput" placeholder="🗺️ أدخل وجهتك..." />
+      <button class="nav-go" onclick="openMaps()">🧭 <span id="navLabel">انطلق</span></button>
+    </div>
+    <div class="status-row">
+      <div class="chip ok" id="chipCam">📷 كاميرا</div>
+      <div class="chip" id="chipGPS">📍 GPS</div>
+      <div class="chip" id="chipAI">🤖 AI</div>
+    </div>
+    <div class="controls">
+      <button class="ctrl" id="voiceBtn" onclick="toggleVoice()">🔊</button>
+      <button class="ctrl main-ctrl" id="mainBtn" onclick="toggleGuide()">▶️</button>
+      <button class="ctrl" onclick="switchCam()">🔄</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ضع مفتاح Gemini هنا
+const GEMINI_KEY = "YOUR_GEMINI_KEY";
+
+const S = {
+  lang: 'ar', voiceLang: 'ar-SA', flag: '🇸🇦',
+  voiceOn: true, running: false,
+  camFacing: 'environment', stream: null,
+  intervalId: null, ringTimer: null,
+  INTERVAL: 4000,
+  busy: false, lastText: '', gps: null
+};
+
+const PROMPTS = {
+  ar: `أنت مرشد ذكي للمكفوفين تحلل إطارات من كاميرا مستمرة. وصف ما تراه بجمل قصيرة مباشرة وعملية مثل: "أمامك رجل يمشي على بعد مترين." أو "يمين الطريق واضح، يسار به عقبة." أو "أمامك درج، انتبه." لا تكرر ما قلته من قبل إلا عند تغيّر المشهد. لا تستخدم emoji. أقصر جملة ممكنة.`,
+  en: `You are a smart real-time guide for blind people analyzing live camera frames. Give short, direct, practical descriptions like: "A person is walking 2 meters ahead." or "Clear path to the right, obstacle on the left." Don't repeat yourself unless the scene changes. No emoji. Be as brief as possible.`,
+  fr: `Vous êtes un guide intelligent en temps réel pour non-voyants. Donnez des descriptions courtes et pratiques. Ne répétez pas. Pas d'emoji. Soyez bref.`,
+  es: `Eres una guía inteligente para ciegos. Da descripciones cortas y prácticas. No te repitas. Sin emoji. Sé breve.`,
+  pt: `Você é um guia inteligente para cegos. Dê descrições curtas e práticas. Não se repita. Sem emoji. Seja breve.`
+};
+
+const UI_TEXT = {
+  ar: { live:'مباشر', nav:'انطلق', waiting:'في انتظار التحليل...' },
+  en: { live:'LIVE',  nav:'Go',    waiting:'Waiting for analysis...' },
+  fr: { live:'LIVE',  nav:'Go',    waiting:'En attente d\'analyse...' },
+  es: { live:'VIVO',  nav:'Ir',    waiting:'Esperando análisis...' },
+  pt: { live:'AO VIVO', nav:'Ir',  waiting:'Aguardando análise...' },
+};
+
+function pickLang(btn, lang, vl, flag) {
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  S.lang = lang; S.voiceLang = vl; S.flag = flag;
+}
+
+async function launch() {
+  show('app');
+  const T = UI_TEXT[S.lang];
+  document.getElementById('liveLabel').textContent = T.live;
+  document.getElementById('navLabel').textContent = T.nav;
+  document.getElementById('langBadge').textContent = S.flag + ' ' + S.lang.toUpperCase();
+  document.getElementById('ai-text').textContent = T.waiting;
+  await startCam();
+  startGPS();
+}
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+async function startCam() {
+  try {
+    if (S.stream) S.stream.getTracks().forEach(t => t.stop());
+    S.stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: S.camFacing, width:{ideal:640}, height:{ideal:480} },
+      audio: false
+    });
+    document.getElementById('cam').srcObject = S.stream;
+    setChip('chipCam', true);
+  } catch(e) { setChip('chipCam', false); }
+}
+
+async function switchCam() {
+  S.camFacing = S.camFacing === 'environment' ? 'user' : 'environment';
+  await startCam();
+}
+
+function startGPS() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.watchPosition(
+    pos => { S.gps = pos.coords; setChip('chipGPS', true); },
+    () => setChip('chipGPS', false),
+    { enableHighAccuracy: true }
+  );
+}
+
+function toggleGuide() { S.running ? stopGuide() : startGuide(); }
+
+function startGuide() {
+  S.running = true;
+  const btn = document.getElementById('mainBtn');
+  btn.textContent = '⏹️';
+  btn.classList.add('running');
+  document.getElementById('bubble').classList.add('show');
+  analyze();
+  S.intervalId = setInterval(() => { if (!S.busy) analyze(); }, S.INTERVAL);
+  startCountdownRing();
+}
+
+function stopGuide() {
+  S.running = false;
+  clearInterval(S.intervalId);
+  clearInterval(S.ringTimer);
+  const btn = document.getElementById('mainBtn');
+  btn.textContent = '▶️';
+  btn.classList.remove('running');
+  window.speechSynthesis.cancel();
+  document.getElementById('waves').classList.remove('active');
+  document.getElementById('speakIcon').classList.remove('talking');
+  resetRing();
+}
+
+function startCountdownRing() {
+  resetRing();
+  let elapsed = 0;
+  const circle = document.getElementById('scanCircle');
+  S.ringTimer = setInterval(() => {
+    elapsed += 100;
+    const progress = Math.min(elapsed / S.INTERVAL, 1);
+    circle.style.strokeDashoffset = 157 - (157 * progress);
+    if (elapsed >= S.INTERVAL) elapsed = 0;
+  }, 100);
+}
+
+function resetRing() {
+  clearInterval(S.ringTimer);
+  const c = document.getElementById('scanCircle');
+  if (c) c.style.strokeDashoffset = 157;
+}
+
+// ====== Gemini API ======
+async function analyze() {
+  if (!S.running || S.busy) return;
+  S.busy = true;
+  setChip('chipAI', null);
+
+  const video = document.getElementById('cam');
+  const canvas = document.getElementById('cap');
+  canvas.width = 320;
+  canvas.height = 240;
+  canvas.getContext('2d').drawImage(video, 0, 0, 320, 240);
+  const b64 = canvas.toDataURL('image/jpeg', 0.3).split(',')[1];
+
+  const prompt = S.lastText
+    ? (S.lang === 'ar'
+        ? `${PROMPTS[S.lang]}\nآخر وصف: "${S.lastText}". صف فقط إذا تغير شيء مهم.`
+        : `${PROMPTS[S.lang]}\nLast: "${S.lastText}". Describe only if something changed.`)
+    : PROMPTS[S.lang];
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: "image/jpeg", data: b64 } },
+              { text: prompt }
+            ]
+          }],
+          generationConfig: {
+            maxOutputTokens: 60,
+            temperature: 0.2
+          }
+        })
+      }
+    );
+
+    const data = await res.json();
+    const txt = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (txt && txt.length > 3) {
+      S.lastText = txt;
+      showText(txt);
+      if (S.voiceOn) speak(txt);
+    }
+    setChip('chipAI', true);
+  } catch(e) {
+    setChip('chipAI', false);
+  }
+
+  S.busy = false;
+}
+
+function showText(txt) {
+  document.getElementById('ai-text').textContent = txt;
+  document.getElementById('bubble').classList.add('show');
+}
+
+function speak(txt) {
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(txt);
+  u.lang = S.voiceLang; u.rate = 1.1; u.pitch = 1;
+  const icon = document.getElementById('speakIcon');
+  const waves = document.getElementById('waves');
+  icon.classList.add('talking');
+  waves.classList.add('active');
+  u.onend = u.onerror = () => {
+    icon.classList.remove('talking');
+    waves.classList.remove('active');
+  };
+  window.speechSynthesis.speak(u);
+}
+
+function toggleVoice() {
+  S.voiceOn = !S.voiceOn;
+  document.getElementById('voiceBtn').textContent = S.voiceOn ? '🔊' : '🔇';
+  if (!S.voiceOn) window.speechSynthesis.cancel();
+}
+
+function openMaps() {
+  const dest = document.getElementById('destInput').value.trim();
+  if (!dest) return;
+  const url = S.gps
+    ? `https://www.google.com/maps/dir/${S.gps.latitude},${S.gps.longitude}/${encodeURIComponent(dest)}`
+    : `https://www.google.com/maps/search/${encodeURIComponent(dest)}`;
+  window.open(url, '_blank');
+}
+
+function setChip(id, ok) {
+  const c = document.getElementById(id);
+  c.className = 'chip' + (ok === true ? ' ok' : ok === false ? ' warn' : '');
+}
+
+function exitApp() {
+  stopGuide();
+  if (S.stream) S.stream.getTracks().forEach(t => t.stop());
+  S.stream = null; S.gps = null;
+  window.speechSynthesis.cancel();
+  show('welcome');
+}
+</script>
+</body>
+</html>
